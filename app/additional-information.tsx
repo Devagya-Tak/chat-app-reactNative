@@ -2,24 +2,27 @@ import { View, Text, Pressable, Image, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system'
-import { Stack } from 'expo-router';
+import { Link, Stack, router, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { decode } from 'base64-arraybuffer'
 import { useAuthStore } from '@/store';
 import { supabase } from '@/supabase';
 
 const AdditionalInformation = () => {
+  const router = useRouter();
+
   const [image, setImage] = useState<null | string>(null);
+  const [fileName, setFileName] = useState('')
 
   const user = useAuthStore(s => s.user)
   const fetchUser = useAuthStore(s => s.fetchUser)
 
   useEffect(() => {
-    
-  
+
+
     fetchUser();
   }, [])
-  
+
 
   const handlePick = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -38,11 +41,14 @@ const AdditionalInformation = () => {
   const handleUploadImage = async () => {
     // Upload image logic here
     if (image) {
-      
+
       const base64 = await FileSystem.readAsStringAsync(image, {
         encoding: 'base64'
       })
-      const fileName = `${user}/pfp.png`
+
+      const timeStamp = Date.now()
+      const fileName = `${user?.id}/pfp_${timeStamp}.png`
+      setFileName(fileName)
       const { data, error } = await supabase
         .storage
         .from('pfps')
@@ -51,6 +57,12 @@ const AdditionalInformation = () => {
         })
       if (!error) {
         Alert.alert("profile photo uploaded sucessfully")
+        router.replace({ pathname: './add-ussername-bio', params: { fileName } })
+
+        // const {data: updateData, error: updateError} = await supabase
+        //   .from('profiles')
+        //   .update({pfp: fileName})
+        //   .eq('id', user)
       } else {
         Alert.alert("An error occured", error.message)
       }
@@ -78,7 +90,7 @@ const AdditionalInformation = () => {
           marginBottom: 20, // Add space between text and image picker box
         }}
       >
-        Additional Information
+        Add your profile photo
       </Text>
       <View
         style={{
@@ -94,6 +106,7 @@ const AdditionalInformation = () => {
           marginBottom: 20, // Space between image picker and other elements
         }}
       >
+
         {image ? (
           <View
             style={{

@@ -1,0 +1,93 @@
+// import { View, Text, Alert } from 'react-native'
+// import React, { useEffect, useState } from 'react'
+// import { Stack, useLocalSearchParams } from 'expo-router'
+// import { SafeAreaView } from 'react-native-safe-area-context'
+// import { ScrollView } from 'react-native'
+// import { supabase } from '@/supabase'
+// import { useAuthStore } from '@/store'
+
+// const Chat = () => {
+//   const { friend, username } = useLocalSearchParams()
+//   const [messages, setMessages] = useState<any[]>([])
+//   const user = useAuthStore(s => s.user)
+
+//   // Fetch messages and delete them after fetching
+//   const fetchMessages = async () => {
+//     const { data, error } = await supabase
+//       .from('messages')
+//       .select('*')
+//       .eq('from', friend)
+//       .eq('to', user)
+
+//     if (!error) {
+//       console.log('Fetched Messages:', data)
+//       setMessages(data)
+
+//       // Delete the messages after fetching
+//       const { error: deleteError } = await supabase
+//         .from('messages')
+//         .delete()
+//         .eq('from', friend)
+//         .eq('to', user)
+
+//       if (deleteError) {
+//         Alert.alert('An error occurred while deleting messages', deleteError.message)
+//       }
+//     } else {
+//       Alert.alert('An error occurred while fetching messages', error.message)
+//     }
+//   }
+
+//   useEffect(() => {
+//     // Fetch existing messages
+//     fetchMessages()
+
+//     // Subscribe to real-time updates for new messages
+//     const subscription = supabase
+//       .channel('room1')
+//       .on(
+//         'postgres_changes', 
+//         { event: 'INSERT', schema: 'public', table: 'messages' },
+//         payload => {
+//           setMessages(prevMessages => [...prevMessages, payload.new])
+//         }
+//       )
+//       .subscribe()
+
+//     return () => {
+//       supabase.removeChannel(subscription)
+//     }
+//   }, [])
+
+//   return (
+//     <SafeAreaView
+//       style={{
+//         backgroundColor: 'black',
+//         flex: 1
+//       }}
+//     >
+//       <Stack.Screen
+//         options={{
+//           headerTitle: `${username}`,
+//           headerStyle: {
+//             backgroundColor: 'black',
+//           },
+//           headerTintColor: 'white',
+//         }}
+//       />
+//       <ScrollView contentContainerStyle={{ padding: 10 }}>
+//         {messages.length === 0 ? (
+//           <Text style={{ color: 'white' }}>No messages. Start chatting!</Text>
+//         ) : (
+//           messages.map((msg, index) => (
+//             <View key={index} style={{ marginBottom: 10 }}>
+//               <Text style={{ color: 'white' }}>{msg.content}</Text>
+//             </View>
+//           ))
+//         )}
+//       </ScrollView>
+//     </SafeAreaView>
+//   )
+// }
+
+// export default Chat

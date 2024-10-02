@@ -1,0 +1,59 @@
+import { View, Text, Alert, Image, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { useAuthStore } from '@/store';
+import { supabase } from '@/supabase';
+
+const ChatWithPeople = () => {
+  const [people, setPeople] = useState<any[]>([]);
+  const isLoggedIn = useAuthStore(state => state.isLoggedIn);
+
+  const fetchProfiles = async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (!error) {
+      console.log(data);
+      const updatedPeople = await Promise.all(
+        data.map(async (person) => {
+          const { data: { publicUrl }, error: urlError } = supabase
+            .storage
+            .from('pfps')
+            .getPublicUrl(person.pfp);
+
+          if (urlError) {
+            console.log(urlError.message);
+            return person;
+          }
+
+          return { ...person, pfpUrl: publicUrl };
+        })
+      );
+      setPeople(updatedPeople);
+    } else {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfiles();
+  }, []);
+
+  return (
+    <ScrollView>
+      {people.map(person => (
+        <View key={person.id} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+          {person.pfpUrl && (  // Ensure we use the correct key
+            <Image
+              source={{ uri: person.pfpUrl }}  // Pass the correct URI to the source prop
+              style={{ width: 50, height: 50, borderRadius: 25, marginRight: 10 }}
+            />
+          )}
+          <Text>{person.username}</Text>
+        </View>
+      ))}
+    </ScrollView>
+  );
+};
+
+export default ChatWithPeople;

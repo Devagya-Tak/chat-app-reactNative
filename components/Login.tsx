@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/supabase';
@@ -8,17 +8,31 @@ import { Link, Stack } from 'expo-router';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false)
 
     const isLoggedIn = useAuthStore(state => state.isLoggedIn)
     const setIsLoggedIn = useAuthStore(state => state.setIsLoggedIn)
+    const fetchUser = useAuthStore( s => s.fetchUser)
     
 
     const handleLogin = async () => {
+        console.log('login button clicked')
         const { data, error } = await supabase.auth.signInWithPassword({
             email: email,
             password: password
         });
-        setIsLoggedIn(true)
+        console.log("object")
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (!error) {
+            Alert.alert("User logged in succesfully")
+            setIsLoggedIn(true)
+            console.log(user?.id)
+            fetchUser()
+        } else {
+            Alert.alert("Error: ", error.message)
+        }
+
+        
     };
 
     return (

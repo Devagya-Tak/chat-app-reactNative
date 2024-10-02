@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Link, Stack } from 'expo-router';
+import { Link, Stack, useLocalSearchParams } from 'expo-router';
 
 const AddUsernameBio = () => {
     const [username, setUsername] = useState('')
     const [bio, setBio] = useState('')
+    const { fileName } = useLocalSearchParams()
 
     const user = useAuthStore(s => s.user)
     const fetchUser = useAuthStore(s => s.fetchUser)
@@ -15,28 +16,69 @@ const AddUsernameBio = () => {
     useEffect(() => {
 
 
-        fetchUser
+        fetchUser()
     }, [])
 
 
+    // const handleInformation = async () => {
+    //     const { data: { user } } = await supabase.auth.getUser();
+    //     try {
+    //         const { data, error } = await supabase
+    //             .from('profiles')
+    //             .insert({
+    //                 id: user?.id,
+    //                 username: username,
+    //                 pfp: fileName
+    //             })
+    //         if (!error) {
+    //             Alert.alert("Information submitted successfully")
+    //         } else {
+    //             console.log("Something went wrong", error.message)
+    //             console.log('User ID:', user?.id);
+
+    //         }
+    //     } catch (err) {
+    //         console.error(err);
+
+    //     }
+    // };
+
     const handleInformation = async () => {
         try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .insert({
-                    id: user,
-                    username: username
-                })
-            if (!error) {
-                Alert.alert("Information submitted successfully")
+            // Fetch the user information from Supabase
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            console.log(user?.id)
+    
+            // Handle error in fetching user
+            if (userError) {
+                console.error("Error fetching user:", userError.message);
+                return;
+            }
+    
+            if (user) {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: user.id, // Use the correct user ID
+                        username: username,
+                        bio: bio, // Insert bio as well
+                        pfp: fileName,
+                    });
+    
+                if (!error) {
+                    Alert.alert("Information submitted successfully");
+                } else {
+                    console.log("Something went wrong", error.message);
+                }
             } else {
-                Alert.alert("Something went wrong", error.message)
+                console.log("No user found");
             }
         } catch (err) {
-            console.error(err);
-
+            console.error("Error:", err);
         }
+        
     };
+    
 
     const rand = async () => {
         const { data, error } = await supabase

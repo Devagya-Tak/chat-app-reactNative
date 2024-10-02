@@ -6,15 +6,28 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface AuthStore {
     isLoggedIn: boolean;
     user: User | null;
+    profile: Profile | null;
+    pfpPublicUrl: string | null;
     fetchUser: () => Promise<void>;
     initializeUser: () => Promise<void>;
     setIsLoggedIn: (value: boolean) => Promise<void>;
     setUser: (value: any) => Promise<void>;
+    setProfile: (profile: Profile) => void;
+
 }
+
+type Profile = {
+    id: string;
+    username: string;
+    pfp?: string; // Optional profile picture field
+    bio?: string;
+};
 
 export const useAuthStore = create<AuthStore>((set) => ({
     isLoggedIn: false,
     user: null,
+    profile: null,
+    pfpPublicUrl: null,
 
     fetchUser: async () => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -49,16 +62,21 @@ export const useAuthStore = create<AuthStore>((set) => ({
             });
         }
     },
-    setIsLoggedIn: async (value: boolean) => { 
+    setIsLoggedIn: async (value: boolean) => {
         set({
             isLoggedIn: value
         })
-     },
-     setUser: async (value: any) => { 
+    },
+    setUser: async (value: any) => {
         set({
             user: value
         })
-      }
+    },
+    setProfile: (profile: Profile) => {
+        set({
+            profile: profile
+        })
+    }
 }));
 
 // When your app starts, you should call initializeUser to load the user from AsyncStorage
